@@ -1,5 +1,5 @@
 # Roman numerals
-### Light-weight utility functions that makes easier to work with roman numerals.
+### Lightweight utility functions that makes easier to work with roman numerals.
 
 ```js
 import { parse, toNumeral } from "@rbxts/roman-numerals";
