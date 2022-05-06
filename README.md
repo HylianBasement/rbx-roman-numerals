@@ -4,6 +4,6 @@
 ```js
 import { parse, toNumeral } from "@rbxts/roman-numerals";
 
-parse("CDLXXV"); // 475
+parse("LXIX"); // 69
 toNumeral(3999); // "MMMCMXCIX"
 ```
