@@ -1,6 +1,6 @@
 {
   "name": "@rbxts/roman-numerals",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Utility functions for parsing and converting roman numerals",
   "main": "out/init.lua",
   "types": "out/index.d.ts",

@@ -1,11 +1,13 @@
-type Symbol = keyof typeof numbers;
+type Symbol = typeof symbols[number];
 
 interface Operation {
-	kind: "increment" | "decrement";
+	kind: "add" | "sub";
 	amount: number;
 }
 
-const numbers = {
+const symbols = ["M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"] as const;
+
+const numbers: { [_ in Symbol]: number } = {
 	I: 1,
 	IV: 4,
 	V: 5,
@@ -19,9 +21,7 @@ const numbers = {
 	D: 500,
 	CM: 900,
 	M: 1000,
-} as const;
-
-const symbols = ["M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"] as const;
+};
 
 /**
  * Converts a roman numeral into its number equivalent.
@@ -31,7 +31,7 @@ export function parse(numeral: string) {
 	assert(type(numeral) === "string", `Expected string, got ${type(numeral)}.`);
 
 	if (numeral.size() === 0) {
-		error("The numeral must have at least one symbol.", 2);
+		error("The numeral must contain at least one symbol.", 2);
 	}
 
 	const operations = new Array<Operation>();
@@ -47,22 +47,22 @@ export function parse(numeral: string) {
 		if (lastOperation) {
 			const { kind, amount: lastAmount } = lastOperation;
 
-			if (kind === "increment") {
+			if (kind === "add") {
 				if (lastAmount < amount) {
-					operations.push({ kind: "decrement", amount: lastAmount * 2 });
+					operations.push({ kind: "sub", amount: lastAmount * 2 });
 				}
 
-				operations.push({ kind: "increment", amount });
+				operations.push({ kind: "add", amount });
 			}
 		} else {
-			operations.push({ kind: "increment", amount });
+			operations.push({ kind: "add", amount });
 		}
 	}
 
 	return operations.reduce((acc, value) => {
 		const { kind, amount } = value;
 
-		if (kind === "increment") {
+		if (kind === "add") {
 			return acc + amount;
 		}
 
