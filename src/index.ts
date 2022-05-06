@@ -1,35 +1,27 @@
-import { match, variantModule, VariantOf } from "@rbxts/variant";
+type Symbol = keyof typeof numbers;
 
-const numOperationFn = (amount: number) => ({ amount });
-const registerSymbol = (value: number) => () => ({ value });
+interface Operation {
+	kind: "increment" | "decrement";
+	amount: number;
+}
 
-const Operation = variantModule({
-	increment: numOperationFn,
-	decrement: numOperationFn,
-});
-
-type Operation = VariantOf<typeof Operation>;
-
-const Numeral = variantModule({
-	I: registerSymbol(1),
-	IV: registerSymbol(4),
-	V: registerSymbol(5),
-	IX: registerSymbol(9),
-	X: registerSymbol(10),
-	XL: registerSymbol(40),
-	L: registerSymbol(50),
-	XC: registerSymbol(90),
-	C: registerSymbol(100),
-	CD: registerSymbol(400),
-	D: registerSymbol(500),
-	CM: registerSymbol(900),
-	M: registerSymbol(1000),
-});
-
-type Numeral = VariantOf<typeof Numeral>;
+const numbers = {
+	I: 1,
+	IV: 4,
+	V: 5,
+	IX: 9,
+	X: 10,
+	XL: 40,
+	L: 50,
+	XC: 90,
+	C: 100,
+	CD: 400,
+	D: 500,
+	CM: 900,
+	M: 1000,
+} as const;
 
 const symbols = ["M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"] as const;
-const noop = () => {};
 
 /**
  * Converts a roman numeral into its number equivalent.
@@ -45,37 +37,37 @@ export function parse(numeral: string) {
 	const operations = new Array<Operation>();
 
 	for (const symbol of numeral.upper()) {
-		if (!(symbol in Numeral)) {
+		if (!(symbol in numbers)) {
 			error(`"${symbol}" is not a valid symbol.`, 2);
 		}
 
-		const amount = Numeral[symbol as Numeral["type"]]().value;
+		const amount = numbers[symbol as Symbol];
 		const lastOperation = operations[operations.size() - 1];
 
 		if (lastOperation) {
-			match(lastOperation, {
-				default: noop,
-				increment: ({ amount: lastAmount }) => {
-					if (lastAmount < amount) {
-						operations.push(Operation.decrement(lastAmount * 2));
-					}
+			const { kind, amount: lastAmount } = lastOperation;
 
-					operations.push(Operation.increment(amount));
-				},
-			});
+			if (kind === "increment") {
+				if (lastAmount < amount) {
+					operations.push({ kind: "decrement", amount: lastAmount * 2 });
+				}
+
+				operations.push({ kind: "increment", amount });
+			}
 		} else {
-			operations.push(Operation.increment(amount));
+			operations.push({ kind: "increment", amount });
 		}
 	}
 
-	return operations.reduce(
-		(acc, value) =>
-			match(value, {
-				increment: ({ amount }) => acc + amount,
-				decrement: ({ amount }) => acc - amount,
-			}),
-		0,
-	);
+	return operations.reduce((acc, value) => {
+		const { kind, amount } = value;
+
+		if (kind === "increment") {
+			return acc + amount;
+		}
+
+		return acc - amount;
+	}, 0);
 }
 
 /**
@@ -94,9 +86,9 @@ export function toNumeral(integer: number) {
 	return generateSymbols([], math.round(integer)).join("");
 }
 
-function generateSymbols(symbolArray: Array<Numeral["type"]>, n: number): Array<Numeral["type"]> {
+function generateSymbols(symbolArray: Array<Symbol>, n: number): Array<Symbol> {
 	for (const symbol of symbols) {
-		const { value } = Numeral[symbol]();
+		const value = numbers[symbol as Symbol];
 
 		if (n / value >= 1) {
 			n -= value;
